@@ -21,41 +21,49 @@
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="com.example.laptop.rideuser.Home"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        tools:context="com.example.laptop.rideuser.Home" />
 
 
     <android.support.v7.widget.CardView
+        android:id="@+id/cardView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="70dp"
         android:layout_alignParentBottom="true"
-        app:cardElevation="15dp">
+        android:layout_alignParentStart="true"
+        app:cardElevation="10dp"
+        app:cardBackgroundColor="@android:color/transparent">
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignTop="@+id/cardView"
+            android:layout_marginTop="13dp">
 
+
+            <Button
+                android:id="@+id/Pickupbtn"
+                android:layout_width="240dp"
+                android:layout_height="match_parent"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:background="#f816a463"
+                android:text="Request Pickup"
+                android:textColor="@android:color/white"
+                android:textStyle="bold" />
 
             <ImageView
                 android:id="@+id/imgExpandable"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
+                android:layout_alignParentBottom="true"
+                android:layout_toStartOf="@+id/Pickupbtn"
                 android:src="@mipmap/arrow" />
-
-            <Button
-                android:id="@+id/Pickupbtn"
-                android:layout_width="270dp"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/imgExpandable"
-                android:background="#f816a463"
-                android:text="Request Pickup"
-                android:textColor="@android:color/white"
-                android:textStyle="bold" />
         </RelativeLayout>
 
     </android.support.v7.widget.CardView>
 
-    </RelativeLayout>
+</RelativeLayout>
 

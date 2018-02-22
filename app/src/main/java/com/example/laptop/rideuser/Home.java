@@ -311,12 +311,14 @@ public class Home extends AppCompatActivity
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 Rider rider = dataSnapshot.getValue(Rider.class);
                                 //Adddriver to MAP
-                                mMap.addMarker(new MarkerOptions()
-                                    .position(new LatLng(location.latitude,location.longitude))
-                                    .flat(true)
-                                    .title(rider.getName())
-                                        .snippet("Phone:"+rider.getPhone())
-                                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.car)));
+                                if (rider != null) {
+                                    mMap.addMarker(new MarkerOptions()
+                                        .position(new LatLng(location.latitude,location.longitude))
+                                        .flat(true)
+                                        .title(rider.getName())
+                                            .snippet("Phone:"+rider.getPhone())
+                                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.car)));
+                                }
 
                             }
 

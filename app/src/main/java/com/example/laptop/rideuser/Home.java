@@ -1,6 +1,5 @@
 package com.example.laptop.rideuser;
 
-import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -22,6 +21,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.example.laptop.rideuser.Retrofit.IFCMService;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
@@ -36,7 +36,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -47,9 +46,18 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.gson.Gson;
 
 import Common.Common;
-import Model.Rider;
+import com.example.laptop.rideuser.Model.Notification;
+import com.example.laptop.rideuser.Model.FCMResponse;
+import com.example.laptop.rideuser.Model.Rider;
+import com.example.laptop.rideuser.Model.Sender;
+import com.example.laptop.rideuser.Model.Token;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class Home extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -87,6 +95,11 @@ public class Home extends AppCompatActivity
     int distance= 1 ;
     private static final int LIMIT = 3;
 
+    //send Alert
+    IFCMService mService;
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +108,8 @@ public class Home extends AppCompatActivity
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        mService = Common.getFCMService();
 
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -140,12 +155,76 @@ public class Home extends AppCompatActivity
         btnpickup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (!isDriverfound)
                 requestPickupHere(FirebaseAuth.getInstance().getCurrentUser().getUid());
-
+                else
+                    sendRequestToDriver(driverId);
             }
         });
 
         setUpLocation();
+
+        updateFirebasetoken();
+    }
+
+    private void updateFirebasetoken() {
+        FirebaseDatabase db = FirebaseDatabase.getInstance();
+        DatabaseReference tokens = db.getReference(Common.token_tbl);
+
+
+        Token token = new Token(FirebaseInstanceId.getInstance().getToken());
+
+        tokens.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                .setValue(token);
+
+
+
+    }
+
+    private void sendRequestToDriver(String driverId) {
+        DatabaseReference tokens = FirebaseDatabase.getInstance().getReference(Common.token_tbl);
+
+        tokens.orderByKey().equalTo(driverId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        for (DataSnapshot postsnapshot:dataSnapshot.getChildren())
+                        {
+                            Token token = postsnapshot.getValue(Token.class);//Get token from database with key
+
+                            //convert LAtLng to json
+                            String json_lat_lng = new Gson().toJson(new LatLng(mLastLocation.getLatitude(),mLastLocation.getLongitude()));
+
+                            Notification data = new Notification("RideUser",json_lat_lng);
+
+                            Sender content = new Sender(token.getToken(),data);
+
+                            mService.sendMessage(content)
+                                    .enqueue(new Callback<FCMResponse>() {
+                                        @Override
+                                        public void onResponse(Call<FCMResponse> call, Response<FCMResponse> response) {
+                                            if (response.body().success == 1)
+                                                Toast.makeText(Home.this,"Request Sent",Toast.LENGTH_SHORT).show();
+                                            else
+                                                Toast.makeText(Home.this,"Failed To sentRequest!!",Toast.LENGTH_SHORT).show();
+                                        }
+
+
+                                        @Override
+                                        public void onFailure(Call<FCMResponse> call, Throwable t) {
+                                            Log.e("ERROR",t.getMessage());
+
+                                        }
+                                    });
+
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
     }
 
     private void requestPickupHere(String uid) {

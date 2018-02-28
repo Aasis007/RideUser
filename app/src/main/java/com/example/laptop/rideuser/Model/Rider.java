@@ -1,4 +1,4 @@
-package Model;
+package com.example.laptop.rideuser.Model;
 
 /**
  * Created by Laptop on 12/17/2017.
